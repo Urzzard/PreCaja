@@ -1,0 +1,4 @@
+# Configuración de pnpm. Autoriza el script de instalación de sharp,
+# que el generador de íconos de la PWA necesita para rasterizar.
+allowBuilds:
+  sharp: true

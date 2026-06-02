@@ -1,0 +1,8 @@
+# Configuración de despliegue en Netlify.
+[build]
+  command = "pnpm build"
+  publish = "dist"
+
+[build.environment]
+  # Vite 8 requiere Node moderno; fijamos la versión para builds reproducibles.
+  NODE_VERSION = "22"

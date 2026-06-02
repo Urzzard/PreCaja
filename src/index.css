@@ -1,0 +1,16 @@
+@import 'tailwindcss';
+
+/* Base móvil-primero. Tailwind ya normaliza; aquí solo lo esencial. */
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  /* Respeta los notches y barras del teléfono (PWA a pantalla completa). */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

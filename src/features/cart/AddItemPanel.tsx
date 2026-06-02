@@ -8,31 +8,63 @@ import { QuantityStepper } from '../../components/QuantityStepper'
 /** Referencia estable para cuando la query aún no devolvió datos. */
 const NO_PRODUCTS: Product[] = []
 
+/** Semilla que deja un escaneo: el código y, si es conocido, su nombre y precio. */
+export interface ScanSeed {
+  /** Único por escaneo (incluso del mismo código), usado como `key` para reiniciar. */
+  nonce: number
+  code: string
+  name: string
+  price: string
+}
+
 /**
- * Panel para agregar un producto a mano. Aparece entre la lista y el total,
- * así el total se ve crecer en vivo. Tras añadir, se resetea y vuelve el foco
- * al nombre, para registrar rápido varios productos seguidos (~3s c/u).
+ * Panel para agregar un producto, por escaneo o a mano. Aparece entre la lista
+ * y el total, así el total se ve crecer en vivo. Tras añadir, se resetea y vuelve
+ * el foco al nombre, para registrar rápido varios productos seguidos (~3s c/u).
  *
- * Autocompletar: si el nombre coincide con un producto ya conocido, reusa su
- * código y precarga su último precio (que el usuario puede corregir).
+ * Recibe `initialSeed` ya resuelto por el escáner. Para reaplicar una semilla
+ * nueva, el padre cambia la `key` de este componente (lo remonta) — así evitamos
+ * sincronizar props↔estado con efectos.
+ *
+ * Código del producto al guardar: si vino de un escaneo, el código real de barras;
+ * si no, el de un producto conocido que coincida por nombre; si tampoco, `manual:<uuid>`.
  */
-export function AddItemPanel({ boxId }: { boxId: string }) {
+export function AddItemPanel({
+  boxId,
+  initialSeed,
+  onAdded,
+}: {
+  boxId: string
+  initialSeed: ScanSeed | null
+  /** Aviso al padre tras añadir, para que limpie la semilla del escaneo. */
+  onAdded?: () => void
+}) {
   const products = useLiveQuery(() => listProducts(), []) ?? NO_PRODUCTS
-  const [name, setName] = useState('')
-  const [price, setPrice] = useState('')
+  const [name, setName] = useState(initialSeed?.name ?? '')
+  const [price, setPrice] = useState(initialSeed?.price ?? '')
   const [quantity, setQuantity] = useState(1)
+  const [scannedCode, setScannedCode] = useState<string | null>(
+    initialSeed?.code ?? null,
+  )
   const nameRef = useRef<HTMLInputElement>(null)
 
-  /** Producto conocido que coincide por nombre (sin distinguir mayúsculas). */
+  /** Producto conocido que coincide por nombre (para la entrada manual). */
   const match = useMemo(() => {
     const needle = name.trim().toLowerCase()
     if (!needle) return undefined
     return products.find((p) => p.name.trim().toLowerCase() === needle)
   }, [name, products])
 
-  /** Al escribir el nombre, si coincide con un conocido, precargar su último precio. */
+  /** ¿El código escaneado ya existe en el catálogo? */
+  const scannedKnown = useMemo(
+    () => (scannedCode ? products.some((p) => p.code === scannedCode) : false),
+    [scannedCode, products],
+  )
+
+  /** Al escribir el nombre (sin código escaneado), precargar precio si es conocido. */
   function handleNameChange(value: string) {
     setName(value)
+    if (scannedCode) return // con código escaneado, el nombre es para registrar
     const needle = value.trim().toLowerCase()
     const known = needle
       ? products.find((p) => p.name.trim().toLowerCase() === needle)
@@ -46,7 +78,7 @@ export function AddItemPanel({ boxId }: { boxId: string }) {
   async function handleAdd() {
     if (!canAdd) return
     const trimmedName = name.trim()
-    const code = match ? match.code : `manual:${crypto.randomUUID()}`
+    const code = scannedCode ?? match?.code ?? `manual:${crypto.randomUUID()}`
     await saveProductPrice(code, trimmedName, priceNum)
     await addItem({
       boxId,
@@ -55,15 +87,34 @@ export function AddItemPanel({ boxId }: { boxId: string }) {
       price: priceNum,
       quantity,
     })
-    // Reset para el siguiente producto.
+    // Reset para el siguiente producto (a mano).
     setName('')
     setPrice('')
     setQuantity(1)
+    setScannedCode(null)
     nameRef.current?.focus()
+    onAdded?.()
   }
 
   return (
     <section className="space-y-3 border-t border-slate-200 bg-white px-5 py-4 dark:border-slate-800 dark:bg-slate-900">
+      {scannedCode && (
+        <div className="flex items-center justify-between gap-2 rounded-xl bg-slate-100 px-3 py-2 text-sm dark:bg-slate-800">
+          <span className="truncate tabular-nums text-slate-600 dark:text-slate-300">
+            📷 {scannedCode}
+          </span>
+          <span
+            className={`shrink-0 font-medium ${
+              scannedKnown
+                ? 'text-emerald-700 dark:text-emerald-400'
+                : 'text-amber-600 dark:text-amber-400'
+            }`}
+          >
+            {scannedKnown ? 'conocido' : 'nuevo · regístralo'}
+          </span>
+        </div>
+      )}
+
       <input
         ref={nameRef}
         type="text"
@@ -80,7 +131,7 @@ export function AddItemPanel({ boxId }: { boxId: string }) {
         ))}
       </datalist>
 
-      {match && (
+      {!scannedCode && match && (
         <p className="text-sm text-emerald-700 dark:text-emerald-400">
           🏷️ Conocido · último {formatPEN(match.lastPrice)}
         </p>

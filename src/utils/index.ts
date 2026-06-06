@@ -1,2 +1,6 @@
 export { formatPEN, roundMoney } from './currency'
 export { formatDate, formatDateTime } from './date'
+export { compareTotals } from './checkout'
+export type { TotalComparison, DiffDirection } from './checkout'
+export { compressImage } from './image'
+export type { CompressOptions } from './image'

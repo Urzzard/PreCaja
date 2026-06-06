@@ -6,7 +6,7 @@ import { Button } from '../../components/Button'
  * Pantalla inicial cuando no hay caja abierta: pedir un nombre y crear la caja.
  * Al crearla, la query reactiva de la caja abierta cambia sola a la pantalla activa.
  */
-export function NewBoxScreen() {
+export function NewBoxScreen({ onShowHistory }: { onShowHistory: () => void }) {
   const [name, setName] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -38,10 +38,17 @@ export function NewBoxScreen() {
         />
       </main>
 
-      <footer className="px-5 pb-8 pt-4">
+      <footer className="space-y-3 px-5 pb-8 pt-4">
         <Button onClick={handleCreate} disabled={busy}>
           Crear caja
         </Button>
+        <button
+          type="button"
+          onClick={onShowHistory}
+          className="w-full rounded-2xl border border-slate-300 py-3 text-base font-semibold text-slate-600 transition active:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:active:bg-slate-800"
+        >
+          Ver historial
+        </button>
       </footer>
     </div>
   )

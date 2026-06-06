@@ -123,3 +123,7 @@ verificable desde la consola del navegador o pruebas simples).
 - **Empaquetado a tiendas:** TWA/Bubblewrap para Google Play, Capacitor para App Store.
 - **Sincronización en la nube** (solo si alguna vez se quiere multi-dispositivo): requeriría backend
   y cuentas; es un cambio de alcance grande y se evaluaría aparte.
+
+> Para la visión de escalado a largo plazo (sync opt-in, comparación de precios entre tiendas,
+> históricos/ofertas, agregación de datos y sus implicancias legales/éticas y de calidad de datos),
+> ver [`docs/VISION.md`](./VISION.md).

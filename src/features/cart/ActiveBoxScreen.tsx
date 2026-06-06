@@ -17,7 +17,14 @@ import { ScannerView } from '../scanner/ScannerView'
  * conocido, con su nombre y último precio (confirmar cantidad); si es nuevo,
  * con el código asociado para registrarlo una vez.
  */
-export function ActiveBoxScreen({ box }: { box: Box }) {
+export function ActiveBoxScreen({
+  box,
+  onClose,
+}: {
+  box: Box
+  /** Ir a la pantalla de cierre (contraste aproximado vs. real). */
+  onClose: () => void
+}) {
   const items = useBoxItems(box.id)
   const [adding, setAdding] = useState(true)
   const [cameraOn, setCameraOn] = useState(true)
@@ -52,14 +59,24 @@ export function ActiveBoxScreen({ box }: { box: Box }) {
       />
 
       {/* Cabecera de la caja */}
-      <header className="border-b border-slate-100 px-5 pt-4 pb-3 dark:border-slate-800">
-        <p className="text-sm font-medium tracking-wide text-emerald-700 dark:text-emerald-400">
-          PreCaja
-        </p>
-        <h1 className="text-xl font-bold tracking-tight">{box.name}</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          {items.length} {items.length === 1 ? 'producto' : 'productos'}
-        </p>
+      <header className="flex items-start justify-between gap-3 border-b border-slate-100 px-5 pt-4 pb-3 dark:border-slate-800">
+        <div className="min-w-0">
+          <p className="text-sm font-medium tracking-wide text-emerald-700 dark:text-emerald-400">
+            PreCaja
+          </p>
+          <h1 className="truncate text-xl font-bold tracking-tight">{box.name}</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            {items.length} {items.length === 1 ? 'producto' : 'productos'}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={items.length === 0}
+          className="shrink-0 self-center rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium text-slate-600 transition active:bg-slate-100 disabled:opacity-40 dark:border-slate-700 dark:text-slate-300 dark:active:bg-slate-800"
+        >
+          Cerrar caja
+        </button>
       </header>
 
       {/* Zona central — lista de items */}
